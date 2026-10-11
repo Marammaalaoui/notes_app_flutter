@@ -1,50 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-void main() {
-  runApp(MyApp());
-}
+import 'screens/home_screen.dart';
+import 'screens/notes_screen.dart';
 
-class MyApp extends StatelessWidget {
+void main() => runApp(const NotesApp());
+
+final _router = GoRouter(
+  routes: [
+    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/notes', builder: (context, state) => const NotesScreen()),
+  ],
+);
+
+class NotesApp extends StatelessWidget {
+  const NotesApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: StyleDemo(),
-    );
-  }
-}
-
-class StyleDemo extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Container(
-          width: 200,
-          height: 200,
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                spreadRadius: 2,
-                blurRadius: 3.84,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              'Styled Component',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
+    return MaterialApp.router(
+      title: 'Notes App',
+      theme: ThemeData(colorSchemeSeed: const Color(0xFF208AEF)),
+      darkTheme: ThemeData(
+        colorSchemeSeed: const Color(0xFF208AEF),
+        brightness: Brightness.dark,
       ),
+      routerConfig: _router,
     );
   }
 }
