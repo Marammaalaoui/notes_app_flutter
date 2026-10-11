@@ -1,7 +1,8 @@
-// lib/screens/notes_screen.dart
 import 'package:flutter/material.dart';
 
 import '../models/note.dart';
+import '../widgets/note_input_dialog.dart';
+import '../widgets/note_item.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -16,66 +17,31 @@ class _NotesScreenState extends State<NotesScreen> {
     const Note(id: '2', title: 'Shopping', content: 'Milk, bread, coffee.'),
   ];
 
-  Future<void> _showNoteDialog({Note? note}) async {
-    final titleController = TextEditingController(text: note?.title);
-    final contentController = TextEditingController(text: note?.content);
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(note == null ? 'New note' : 'Edit note'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 12,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-            ),
-            TextField(
-              controller: contentController,
-              decoration: const InputDecoration(labelText: 'Content'),
-              maxLines: 4,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    final title = titleController.text.trim();
-    final content = contentController.text.trim();
-    // NOTE: these controllers are never disposed here. Disposing them right
-    // after the dialog closes would crash, because the closing animation still
-    // uses them. We fix this properly in section 5.4.
-
-    if (saved != true || title.isEmpty) return;
-
+  Future<void> _add() async {
+    final draft = await showNoteInputDialog(context);
+    if (draft == null) return;
     setState(() {
-      if (note == null) {
-        _notes.insert(
-          0,
-          Note(id: DateTime.now().microsecondsSinceEpoch.toString(), title: title, content: content),
-        );
-      } else {
-        final index = _notes.indexWhere((n) => n.id == note.id);
-        _notes[index] = note.copyWith(title: title, content: content);
-      }
+      _notes.insert(
+        0,
+        Note(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          title: draft.title,
+          content: draft.content,
+        ),
+      );
     });
   }
 
-  void _deleteNote(String id) {
-    setState(() => _notes.removeWhere((n) => n.id == id));
+  Future<void> _edit(Note note) async {
+    final draft = await showNoteInputDialog(context, initial: note);
+    if (draft == null) return;
+    setState(() {
+      final index = _notes.indexWhere((n) => n.id == note.id);
+      _notes[index] = note.copyWith(title: draft.title, content: draft.content);
+    });
   }
+
+  void _delete(String id) => setState(() => _notes.removeWhere((n) => n.id == id));
 
   @override
   Widget build(BuildContext context) {
@@ -88,23 +54,16 @@ class _NotesScreenState extends State<NotesScreen> {
               itemCount: _notes.length,
               itemBuilder: (context, index) {
                 final note = _notes[index];
-                return Card(
+                return NoteItem(
                   key: ValueKey(note.id),
-                  child: ListTile(
-                    title: Text(note.title),
-                    subtitle: Text(note.content, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    onTap: () => _showNoteDialog(note: note),
-                    trailing: IconButton(
-                      tooltip: 'Delete ${note.title}',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => _deleteNote(note.id),
-                    ),
-                  ),
+                  note: note,
+                  onEdit: () => _edit(note),
+                  onDelete: () => _delete(note.id),
                 );
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showNoteDialog(),
+        onPressed: _add,
         tooltip: 'Add note',
         child: const Icon(Icons.add),
       ),
