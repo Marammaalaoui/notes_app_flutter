@@ -1,6 +1,14 @@
-/// Immutable data class: to change a note, create a copy.
+// "Row" is also the name of a Flutter widget, so we import the models with a prefix.
+import 'package:appwrite/models.dart' as models;
+
 class Note {
   const Note({required this.id, required this.title, required this.content});
+
+  factory Note.fromRow(models.Row row) => Note(
+        id: row.$id,
+        title: row.data['title'] as String,
+        content: (row.data['content'] as String?) ?? '',
+      );
 
   final String id;
   final String title;

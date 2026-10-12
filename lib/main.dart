@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'config/app_config.dart';
 import 'screens/home_screen.dart';
 import 'screens/notes_screen.dart';
 
-void main() => runApp(const NotesApp());
+void main() {
+  AppConfig.validate();
+  runApp(const NotesApp());
+}
 
 final _router = GoRouter(
   routes: [
