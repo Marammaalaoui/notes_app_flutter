@@ -58,6 +58,21 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
+  Future<void> _edit(Note note) async {
+    final draft = await showNoteInputDialog(context, initial: note);
+    if (draft == null) return;
+    try {
+      final updated = await notesService.update(note.id, draft);
+      if (!mounted) return;
+      setState(() {
+        final index = _notes.indexWhere((n) => n.id == note.id);
+        _notes[index] = updated;
+      });
+    } on AppwriteException catch (e) {
+      _showError(e.message ?? 'Could not update the note');
+    }
+  }
+
   Future<void> _delete(Note note) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -109,10 +124,7 @@ class _NotesScreenState extends State<NotesScreen> {
         child: _notes.isEmpty
             ? ListView(
                 children: const [
-                  Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(child: Text('No notes yet.')),
-                  ),
+                  Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No notes yet.'))),
                 ],
               )
             : ListView.builder(
@@ -123,7 +135,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   return NoteItem(
                     key: ValueKey(note.id),
                     note: note,
-                    onEdit: () {},
+                    onEdit: () => _edit(note),
                     onDelete: () => _delete(note),
                   );
                 },
