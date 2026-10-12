@@ -58,6 +58,35 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
+  Future<void> _delete(Note note) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete note'),
+        content: Text('Delete "${note.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await notesService.delete(note.id);
+      if (!mounted) return;
+      setState(() => _notes.removeWhere((n) => n.id == note.id));
+    } on AppwriteException catch (e) {
+      _showError(e.message ?? 'Could not delete the note');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget body;
@@ -95,7 +124,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     key: ValueKey(note.id),
                     note: note,
                     onEdit: () {},
-                    onDelete: () {},
+                    onDelete: () => _delete(note),
                   );
                 },
               ),
