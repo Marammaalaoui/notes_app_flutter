@@ -41,6 +41,23 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _add() async {
+    final draft = await showNoteInputDialog(context);
+    if (draft == null) return;
+    try {
+      final created = await notesService.create(draft);
+      if (!mounted) return;
+      setState(() => _notes.insert(0, created));
+    } on AppwriteException catch (e) {
+      _showError(e.message ?? 'Could not save the note');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget body;
@@ -88,7 +105,11 @@ class _NotesScreenState extends State<NotesScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('My Notes')),
       body: body,
-      // floatingActionButton unchanged for now
+      floatingActionButton: FloatingActionButton(
+        onPressed: _add,
+        tooltip: 'Add note',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
